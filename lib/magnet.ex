@@ -33,6 +33,11 @@ defmodule Magnet do
       }
   """
   @spec parse(String.t) :: tuple
+  def parse(uris) when is_list(uris) do
+    Task.async_stream(uris, &parse/1)
+    |> Enum.to_list
+  end
+
   def parse(uri) do
     try do
       String.trim_leading(uri, "magnet:?")
