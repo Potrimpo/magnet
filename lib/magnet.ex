@@ -1,9 +1,37 @@
 defmodule Magnet do
+  @moduledoc """
+  Provides functionality for dealing with magnet links.
+  """
+
   # compare as strings so that external input is never free to fill up erlang vm atom registry
   @valid_keys ["xt", "dn", "tr"]
   
   ## PUBLIC API
 
+  @doc """
+  Turns a magnet URI into a map
+
+  Returns a tuple of either {:ok, parsed_magnet} | {:error, message}
+
+  ### Examples
+
+    iex> Magnet.parse("magnet:?
+      xt=urn:btih:b99f93d2df9472910941c4a315718fb0d1eff191
+      &dn=The+Mummy+2017+HD-TS+x264-CPG
+      &tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969
+      &tr=udp%3A%2F%2Fzer0day.ch%3A1337"
+
+      {:ok,
+        %{
+          dn: "The Mummy 2017 HD-TS x264-CPG",
+          tr: [
+            "udp%3A%2F%2Fzer0day.ch%3A1337",
+            "udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969"
+            ],
+          xt: "urn:btih:b99f93d2df9472910941c4a315718fb0d1eff191"
+        }
+      }
+  """
   @spec parse(String.t) :: tuple
   def parse(uri) do
     try do
@@ -17,6 +45,21 @@ defmodule Magnet do
     end
   end
 
+  @doc """
+  Returns only the specified parameter of a given magnet URI
+
+  Returns a tuple of either {:ok, value} | {:error, message}
+
+  ### Examples
+
+    iex> Magnet.get("magnet:?
+      xt=urn:btih:b99f93d2df9472910941c4a315718fb0d1eff191
+      &dn=The+Mummy+2017+HD-TS+x264-CPG
+      &tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969
+      &tr=udp%3A%2F%2Fzer0day.ch%3A1337", :tr
+
+      {:ok, [ "udp%3A%2F%2Fzer0day.ch%3A1337", "udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969" ] }
+  """
   @spec get(String.t, atom) :: tuple
   def get(uri, param) when is_atom(param) do
     with {:ok, parsed_magnet} <- parse(uri),
