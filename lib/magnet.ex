@@ -5,6 +5,12 @@ defmodule Magnet do
 
   # compare as strings so that external input is never free to fill up erlang vm atom registry
   @valid_keys ["xt", "dn", "tr"]
+
+  @type parsed_magnet :: %{
+    dn: String.t,
+    xt: String.t,
+    tr: String.t | [String.t]
+  }
   
   ## PUBLIC API
 
@@ -32,12 +38,13 @@ defmodule Magnet do
         }
       }
   """
-  @spec parse(String.t) :: tuple
+  @spec parse([String.t]) :: {:ok, [parsed_magnet]} | {:error, String.t}
   def parse(uris) when is_list(uris) do
     Task.async_stream(uris, &parse/1)
     |> Enum.to_list
   end
 
+  @spec parse(String.t) :: {:ok, parsed_magnet} | {:error, String.t}
   def parse(uri) do
     try do
       String.trim_leading(uri, "magnet:?")
@@ -65,14 +72,14 @@ defmodule Magnet do
 
       {:ok, [ "udp%3A%2F%2Fzer0day.ch%3A1337", "udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969" ] }
   """
-  @spec get(String.t, atom) :: tuple
+  @spec get(String.t, atom) :: {:ok, String.t | [String.t]} | {:error, String.t}
   def get(uri, param) when is_atom(param) do
     with {:ok, parsed_magnet} <- parse(uri),
          val <- Map.get(parsed_magnet, param),
          do: {:ok, val}
   end
 
-  @spec get(String.t, String.t) :: tuple
+  @spec get(String.t, String.t) :: {:ok, String.t | [String.t]} | {:error, String.t}
   def get(uri, param) do
     try do
       with {:ok, parsed_magnet} <- parse(uri),
@@ -86,7 +93,7 @@ defmodule Magnet do
 
   ## PRIVATE FUNCTIONS
 
-  @spec split_to_tuple(String.t) :: tuple
+  @spec split_to_tuple(String.t) :: {atom, String.t}
   defp split_to_tuple(str) do
     String.split(str, "=")
     |> fn [k ,v] -> { String.trim(k), v } end.()
@@ -106,7 +113,7 @@ defmodule Magnet do
   defp pretty_print_name({:dn, val}), do: { :dn, String.replace(val, "+", " ") }
   defp pretty_print_name(x), do: x
 
-  @spec handle_multiples(tuple, map) :: map
+  @spec handle_multiples({atom, String.t}, parsed_magnet | map) :: parsed_magnet | map
   defp handle_multiples({ key, val }, acc) do
     if Map.has_key?(acc, key) do
       Map.update!(acc, key, fn
