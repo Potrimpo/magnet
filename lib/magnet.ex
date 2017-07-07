@@ -79,6 +79,19 @@ defmodule Magnet do
 
       {:ok, [ "udp%3A%2F%2Fzer0day.ch%3A1337", "udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969" ] }
   """
+  @spec get([String.t], atom | String.t) :: [{:ok, String.t | [String.t]} | {:error, String.t}]
+  def get(uris, param) when is_list(uris) do
+    Task.async_stream(uris, Magnet, :get, [param])
+    # unwrap nested tuples
+    |> Stream.map(fn x ->
+      case x do
+        {:ok, val} -> val
+        y -> y
+      end
+    end)
+    |> Enum.to_list
+  end
+
   @spec get(String.t, atom) :: {:ok, String.t | [String.t]} | {:error, String.t}
   def get(uri, param) when is_atom(param) do
     with {:ok, parsed_magnet} <- parse(uri),
