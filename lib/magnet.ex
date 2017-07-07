@@ -38,9 +38,16 @@ defmodule Magnet do
         }
       }
   """
-  @spec parse([String.t]) :: {:ok, [parsed_magnet]} | {:error, String.t}
+  @spec parse([String.t]) :: [{:ok, parsed_magnet} | {:error, String.t}]
   def parse(uris) when is_list(uris) do
     Task.async_stream(uris, &parse/1)
+    # unwrap nested tuples
+    |> Stream.map(fn x ->
+      case x do
+        {:ok, val} -> val
+        y -> y
+      end
+    end)
     |> Enum.to_list
   end
 
