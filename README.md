@@ -1,19 +1,6 @@
 # Magnet
 
-**TODO: Add description**
+## Don't use this package
+## Instead use [this one](https://hex.pm/packages/magnet)
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `magnet` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [{:magnet, "~> 0.1.0"}]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/magnet](https://hexdocs.pm/magnet).
-
+Wrote this after trying to find an existing package and somehow missing the above existing one smdh
