@@ -41,27 +41,15 @@ defmodule Magnet do
   @spec parse([String.t]) :: [{:ok, parsed_magnet} | {:error, String.t}]
   def parse(uris) when is_list(uris) do
     Task.async_stream(uris, &parse/1)
-    # unwrap nested tuples
-    |> Stream.map(fn x ->
-      case x do
-        {:ok, val} -> val
-        y -> y
-      end
-    end)
     |> Enum.to_list
   end
 
   @spec parse(String.t) :: {:ok, parsed_magnet} | {:error, String.t}
   def parse(uri) do
-    try do
-      String.trim_leading(uri, "magnet:?")
-      |> String.split("&")
-      |> Enum.map(&split_to_tuple/1)
-      |> Enum.reduce(%{}, &handle_multiples/2) 
-      |> wrap(:ok)
-    rescue
-      e -> {:error, e.message}
-    end
+    String.trim_leading(uri, "magnet:?")
+    |> String.split("&")
+    |> Enum.map(&split_to_tuple/1)
+    |> Enum.reduce(%{}, &handle_multiples/2) 
   end
 
   @doc """
@@ -82,33 +70,22 @@ defmodule Magnet do
   @spec get([String.t], atom | String.t) :: [{:ok, String.t | [String.t]} | {:error, String.t}]
   def get(uris, param) when is_list(uris) do
     Task.async_stream(uris, Magnet, :get, [param])
-    # unwrap nested tuples
-    |> Stream.map(fn x ->
-      case x do
-        {:ok, val} -> val
-        y -> y
-      end
-    end)
     |> Enum.to_list
   end
 
   @spec get(String.t, atom) :: {:ok, String.t | [String.t]} | {:error, String.t}
   def get(uri, param) when is_atom(param) do
-    with {:ok, parsed_magnet} <- parse(uri),
+    with parsed_magnet <- parse(uri),
          val <- Map.get(parsed_magnet, param),
-         do: {:ok, val}
+         do: val
   end
 
   @spec get(String.t, String.t) :: {:ok, String.t | [String.t]} | {:error, String.t}
   def get(uri, param) do
-    try do
-      with {:ok, parsed_magnet} <- parse(uri),
-          { key, _ } <- magnet_param_to_atom({ param, nil}),
-          val <- Map.get(parsed_magnet, key),
-          do: {:ok, val}
-    rescue
-      e -> {:error, e.message}
-    end
+    with parsed_magnet <- parse(uri),
+         { key, _ } <- magnet_param_to_atom({ param, nil}),
+         val <- Map.get(parsed_magnet, key),
+         do: val
   end
 
   ## PRIVATE FUNCTIONS
@@ -144,7 +121,4 @@ defmodule Magnet do
       Map.put(acc, key, val)
     end
   end
-
-  defp wrap(data, :ok), do: {:ok, data}
-
 end
