@@ -61,6 +61,7 @@ defmodule Magnet do
   @spec get([String.t], atom | String.t) :: [String.t | [String.t]]
   def get(uris, param) when is_list(uris) do
     Task.async_stream(uris, Magnet, :get, [param])
+    |> Stream.map(fn {:ok, val} -> val end)
     |> Enum.to_list
   end
 
